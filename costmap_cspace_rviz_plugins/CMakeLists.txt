@@ -1,70 +1,40 @@
-cmake_minimum_required(VERSION 3.1...3.26)
+cmake_minimum_required(VERSION 3.8...3.26)
 project(costmap_cspace_rviz_plugins)
 
-set(PACKAGE_DEPENDS
-  roscpp
-  rviz
-  costmap_cspace_msgs
-)
-
-find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDS})
-
-catkin_package(CATKIN_DEPENDS ${PACKAGE_DEPENDS})
-
-set(CMAKE_CXX_STANDARD 14)
-add_compile_options(-Wall)
-
-include_directories(
-  include
-  ${catkin_INCLUDE_DIRS}
-)
-link_directories(${catkin_LIBRARY_DIRS})
-
-set(CMAKE_AUTOMOC ON)
-
-if(rviz_QT_VERSION VERSION_LESS "5")
-  message(STATUS "Using Qt4 based on the rviz_QT_VERSION: ${rviz_QT_VERSION}")
-  find_package(Qt4 ${rviz_QT_VERSION} EXACT REQUIRED QtCore QtGui)
-  include(${QT_USE_FILE})
-
-  qt4_wrap_cpp(MOC_FILES
-    include/costmap_cspace_rviz_plugins/c_space_3d_display.h
-  )
-else()
-  message(STATUS "Using Qt5 based on the rviz_QT_VERSION: ${rviz_QT_VERSION}")
-  find_package(Qt5 ${rviz_QT_VERSION} EXACT REQUIRED Core Widgets)
-  set(QT_LIBRARIES Qt5::Widgets)
-
-  qt5_wrap_cpp(MOC_FILES
-    include/costmap_cspace_rviz_plugins/c_space_3d_display.h
-  )
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
 endif()
+add_compile_options(-Wall -Wextra -Wpedantic)
 
+find_package(ament_cmake_auto REQUIRED)
+ament_auto_find_build_dependencies()
+
+find_package(Qt5 REQUIRED COMPONENTS Widgets)
+set(CMAKE_AUTOMOC ON)
+# rviz builds its plugins without the Qt keywords, so the sources here use the
+# Q_SLOTS / Q_SIGNALS / Q_EMIT macro spellings.
 add_definitions(-DQT_NO_KEYWORDS)
 
-add_library(${PROJECT_NAME}
+ament_auto_add_library(${PROJECT_NAME} SHARED
+  include/${PROJECT_NAME}/c_space_3d_display.hpp
   src/c_space_3d_display.cpp
-  ${MOC_FILES}
 )
-add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} Qt5::Widgets)
 
-if(CATKIN_ENABLE_TESTING)
-  find_package(rostest REQUIRED)
-  find_package(roslint REQUIRED)
-  set(ROSLINT_CPP_OPTS "--filter=-runtime/references,-build/c++11")
-  roslint_cpp()
-  roslint_add_test()
+pluginlib_export_plugin_description_file(rviz_common plugin_description.xml)
+
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  # CPP_FORMATTER=clang_format: exclude uncrustify, keep clang_format + cpplint.
+  list(APPEND AMENT_LINT_AUTO_EXCLUDE ament_cmake_uncrustify)
+  # The BSD headers carried over from rviz name Willow Garage where
+  # ament_copyright's templates expect "the copyright holder", so it reports
+  # license=<unknown>. The linter is excluded rather than the license reworded.
+  list(APPEND AMENT_LINT_AUTO_EXCLUDE ament_cmake_copyright)
+  ament_lint_auto_find_test_dependencies()
 endif()
 
-install(TARGETS
-  ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-install(FILES
-  plugin_description.xml
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
+# USE_SCOPED_HEADER_INSTALL_DIR: install headers under include/${PROJECT_NAME}/
+# rather than include/. This is the ament_auto_package default from Kilted on;
+# opting in now keeps the install layout stable across the upgrade.
+ament_auto_package(USE_SCOPED_HEADER_INSTALL_DIR)

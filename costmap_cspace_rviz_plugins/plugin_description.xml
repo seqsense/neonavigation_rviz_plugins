@@ -1,6 +1,8 @@
-<library path="libcostmap_cspace_rviz_plugins">
-  <class name="costmap_cspace_rviz_plugins/CSpace3D" type="costmap_cspace_rviz_plugins::CSpace3DDisplay" base_class_type="rviz::Display">
-    <description>Displays data from a costmap_cspace::CSpace3D message.</description>
-    <message_type>costmap_cspace_msgs/CSpace3D</message_type>
+<library path="costmap_cspace_rviz_plugins">
+  <class name="costmap_cspace_rviz_plugins/CSpace3D"
+         type="costmap_cspace_rviz_plugins::CSpace3DDisplay"
+         base_class_type="rviz_common::Display">
+    <description>Displays one yaw layer of a costmap_cspace_msgs/msg/CSpace3D message.</description>
+    <message_type>costmap_cspace_msgs/msg/CSpace3D</message_type>
   </class>
 </library>

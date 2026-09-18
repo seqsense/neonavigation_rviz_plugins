@@ -1,70 +1,41 @@
-cmake_minimum_required(VERSION 3.1...3.26)
+cmake_minimum_required(VERSION 3.8...3.26)
 project(trajectory_tracker_rviz_plugins)
 
-set(CATKIN_DEPENDS
-  pluginlib
-  rviz
-  trajectory_tracker_msgs
-)
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
+endif()
+add_compile_options(-Wall -Wextra -Wpedantic)
 
-find_package(catkin REQUIRED COMPONENTS ${CATKIN_DEPENDS})
-catkin_package(CATKIN_DEPENDS ${CATKIN_DEPENDS})
+find_package(ament_cmake_auto REQUIRED)
+ament_auto_find_build_dependencies()
 
-
-add_compile_options(-std=c++11)
-include_directories(include ${catkin_INCLUDE_DIRS})
+find_package(Qt5 REQUIRED COMPONENTS Widgets)
 set(CMAKE_AUTOMOC ON)
+# rviz builds its plugins without the Qt keywords, so the sources here use the
+# Q_SLOTS / Q_SIGNALS / Q_EMIT macro spellings.
 add_definitions(-DQT_NO_KEYWORDS)
 
-
-if(rviz_QT_VERSION VERSION_LESS "5")
-  message(STATUS "Using Qt4 based on the rviz_QT_VERSION: ${rviz_QT_VERSION}")
-  find_package(Qt4 ${rviz_QT_VERSION} EXACT REQUIRED QtCore QtGui)
-  ## pull in all required include dirs, define QT_LIBRARIES, etc.
-  include(${QT_USE_FILE})
-
-  qt4_wrap_cpp(MOC_FILES
-    include/trajectory_tracker_rviz_plugins/path_with_velocity_display.h
-  )
-else()
-  message(STATUS "Using Qt5 based on the rviz_QT_VERSION: ${rviz_QT_VERSION}")
-  find_package(Qt5 ${rviz_QT_VERSION} EXACT REQUIRED Core Widgets)
-  ## make target_link_libraries(${QT_LIBRARIES}) pull in all required dependencies
-  set(QT_LIBRARIES Qt5::Widgets)
-
-  qt5_wrap_cpp(MOC_FILES
-    include/trajectory_tracker_rviz_plugins/path_with_velocity_display.h
-  )
-endif()
-
-find_file(HAVE_VALIDATE_QUATERNION_H
-  NAMES rviz/validate_quaternions.h
-  HINTS ${catkin_INCLUDE_DIRS}
-)
-if(HAVE_VALIDATE_QUATERNION_H)
-  add_definitions(-DHAVE_VALIDATE_QUATERNION_H)
-endif()
-
-
-add_library(${PROJECT_NAME}
+ament_auto_add_library(${PROJECT_NAME} SHARED
+  include/${PROJECT_NAME}/path_with_velocity_display.hpp
+  include/${PROJECT_NAME}/validate_floats.hpp
   src/path_with_velocity_display.cpp
-  ${MOC_FILES}
 )
-target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} Qt5::Widgets)
 
+pluginlib_export_plugin_description_file(rviz_common plugin_description.xml)
 
-install(TARGETS
-  ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  # CPP_FORMATTER=clang_format: exclude uncrustify, keep clang_format + cpplint.
+  list(APPEND AMENT_LINT_AUTO_EXCLUDE ament_cmake_uncrustify)
+  # The BSD headers carried over from rviz name Willow Garage where
+  # ament_copyright's templates expect "the copyright holder", so it reports
+  # license=<unknown>. The linter is excluded rather than the license reworded.
+  list(APPEND AMENT_LINT_AUTO_EXCLUDE ament_cmake_copyright)
+  ament_lint_auto_find_test_dependencies()
+endif()
 
-install(FILES
-  plugin_description.xml
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
-
-install(DIRECTORY icons
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
+# USE_SCOPED_HEADER_INSTALL_DIR: install headers under include/${PROJECT_NAME}/
+# rather than include/. This is the ament_auto_package default from Kilted on;
+# opting in now keeps the install layout stable across the upgrade.
+ament_auto_package(USE_SCOPED_HEADER_INSTALL_DIR INSTALL_TO_SHARE icons)
