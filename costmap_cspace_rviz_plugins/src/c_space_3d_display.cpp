@@ -397,14 +397,12 @@ void CSpace3DDisplay::showMap()
   }
 
   if (width * height * angle != current_map_.data.size()) {
+    const QString format =
+      "Data size doesn't match width*height*angle: width = %1, height = %2, angle = %3, "
+      "data size = %4";
     setStatus(
       StatusProperty::Error, "Map",
-      QString("Data size doesn't match width*height*angle: width = %1, height = %2, angle = %3, "
-              "data size = %4")
-        .arg(width)
-        .arg(height)
-        .arg(angle)
-        .arg(current_map_.data.size()));
+      format.arg(width).arg(height).arg(angle).arg(current_map_.data.size()));
     return;
   }
 
@@ -532,9 +530,9 @@ void CSpace3DDisplay::tryCreateSwatches(
     const size_t effective_width = getEffectiveDimension(width, swatch_width, x);
     const size_t effective_height = getEffectiveDimension(height, swatch_height, y);
 
-    swatches_.push_back(std::make_shared<Swatch>(
-      scene_manager_, scene_node_, x, y, effective_width, effective_height, resolution,
-      draw_under));
+    auto swatch = std::make_shared<Swatch>(
+      scene_manager_, scene_node_, x, y, effective_width, effective_height, resolution, draw_under);
+    swatches_.push_back(swatch);
     swatches_[i]->updateData(slice);
 
     x += effective_width;
