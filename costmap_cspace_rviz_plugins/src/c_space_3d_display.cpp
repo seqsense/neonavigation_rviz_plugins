@@ -177,6 +177,10 @@ void CSpace3DDisplay::unsubscribe()
 
 void CSpace3DDisplay::subscribeToUpdateTopic()
 {
+  // Editing the update topic or its QoS calls this directly, not through subscribe().
+  if (!isEnabled()) {
+    return;
+  }
   if (update_topic_property_->isEmpty()) {
     setStatus(StatusProperty::Ok, "Update Topic", "Not specified");
     return;
