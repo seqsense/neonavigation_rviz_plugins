@@ -40,6 +40,7 @@
 
 #include <QString>
 #include <algorithm>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -223,9 +224,10 @@ void CSpace3DDisplay::processMessage(costmap_cspace_msgs::msg::CSpace3D::ConstSh
 bool CSpace3DDisplay::updateDataOutOfBounds(
   const costmap_cspace_msgs::msg::CSpace3DUpdate & update) const
 {
-  return update.x + update.width > current_map_.info.width ||
-         update.y + update.height > current_map_.info.height ||
-         update.yaw + update.angle > current_map_.info.angle ||
+  // Widened so that an offset near UINT32_MAX cannot wrap past the check.
+  return uint64_t{update.x} + update.width > current_map_.info.width ||
+         uint64_t{update.y} + update.height > current_map_.info.height ||
+         uint64_t{update.yaw} + update.angle > current_map_.info.angle ||
          update.data.size() != static_cast<size_t>(update.width) * update.height * update.angle;
 }
 
@@ -281,7 +283,9 @@ void CSpace3DDisplay::applyUpdate(size_t yaw, nav_msgs::msg::OccupancyGrid & gri
   if (yaw < update.yaw || yaw >= static_cast<size_t>(update.yaw) + update.angle) {
     return;
   }
-  if (update.x + update.width > grid.info.width || update.y + update.height > grid.info.height) {
+  if (
+    uint64_t{update.x} + update.width > grid.info.width ||
+    uint64_t{update.y} + update.height > grid.info.height) {
     return;
   }
 
