@@ -1,0 +1,9 @@
+# Source dependency not available from the Alpine ROS package repository.
+#
+# neonavigation_msgs is released, but only in its pre-hybrid form, which does
+# not emit the ROS 2-style headers these packages include. It is therefore
+# built from source here.
+- git:
+    local-name: neonavigation_msgs
+    uri: https://github.com/seqsense/neonavigation_msgs.git
+    version: master
