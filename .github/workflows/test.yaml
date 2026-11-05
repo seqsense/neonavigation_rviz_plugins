@@ -11,8 +11,24 @@ permissions:
 
 jobs:
   test:
-    uses: alpine-ros/alpine-ros-ci-workflows/.github/workflows/ros1.yaml@main
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - alpine-version: "3.23"
+            ros-distro: jazzy
+    uses: alpine-ros/alpine-ros-ci-workflows/.github/workflows/ros2.yaml@main
     with:
+      alpine-version: ${{ matrix.alpine-version }}
+      ros-distro: ${{ matrix.ros-distro }}
       enable-codecov: true
+      rosinstall-files: .rosinstall
+      # The messages come from .rosinstall and are built alongside.
+      manifest-files: |
+        costmap_cspace_rviz_plugins/package.xml
+        neonavigation_rviz_plugins/package.xml
+        trajectory_tracker_rviz_plugins/package.xml
+        ../../home/builder/extsrc/neonavigation_msgs/costmap_cspace_msgs/package.xml
+        ../../home/builder/extsrc/neonavigation_msgs/trajectory_tracker_msgs/package.xml
     secrets:
       codecov-upload-token: ${{ secrets.CODECOV_TOKEN }}
