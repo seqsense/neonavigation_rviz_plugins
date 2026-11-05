@@ -14,6 +14,9 @@
   <exec_depend>costmap_cspace_rviz_plugins</exec_depend>
   <exec_depend>trajectory_tracker_rviz_plugins</exec_depend>
 
+  <test_depend>ament_cmake_lint_cmake</test_depend>
+  <test_depend>ament_cmake_xmllint</test_depend>
+
   <export>
     <build_type>ament_cmake</build_type>
   </export>
